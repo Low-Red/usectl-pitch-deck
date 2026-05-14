@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>usectl - Pitch Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════
+   DESIGN TOKENS
+   ══════════════════════════════════════════ */
+:root {
+    --bg:       #090d12;
+    --surface:  #111820;
+    --surface2: #18222e;
+    --border:   rgba(255,255,255,0.07);
+    --text:     #edf2f8;
+    --text-2:   #b8c8d8;
+    --text-3:   #5e7080;
+    --blue:     #58a6ff;
+    --green:    #3fb950;
+    --orange:   #a78bfa;
+    --blue-a:   rgba(88,166,255,0.15);
+    --green-a:  rgba(63,185,80,0.13);
+    --orange-a: rgba(167,139,250,0.13);
+    --ease:     cubic-bezier(0.22,1,0.36,1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); height: 100%; overflow: hidden; }
+body {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── PROGRESS BAR ── */
+#progress-bar {
+    position: fixed; top: 0; left: 0; height: 2px;
+    background: linear-gradient(90deg, var(--blue), var(--green), var(--blue));
+    background-size: 200%;
+    animation: shimmer-bar 3s linear infinite;
+    box-shadow: 0 0 12px rgba(88,166,255,0.7);
+    transition: width 0.5s var(--ease);
+    z-index: 500;
+}
+@keyframes shimmer-bar { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* ── DECK & SLIDES ── */
+.deck { width: 100vw; height: 100vh; position: relative; }
+.slide {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    opacity: 0; transform: scale(0.97) translateY(6px);
+    transition: opacity 0.55s var(--ease), transform 0.55s var(--ease);
+    pointer-events: none; overflow: hidden;
+}
+.slide.active { opacity: 1; transform: none; pointer-events: all; }
+.slide > .content {
+    position: relative; z-index: 3;
+    width: 100%; max-width: 1100px;
+    padding: clamp(1.5rem, 3.5vw, 3.5rem);
+}
+
+/* Grid background */
+.grid-bg {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+        linear-gradient(rgba(88,166,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(88,166,255,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+}
+
+/* Vignette */
+.slide::after {
+    content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 48%, rgba(0,0,0,0.6) 100%);
+}
+
+/* ── BLOBS ── */
+@keyframes float-slow  { 0%{transform:translate(0,0) scale(1)} 25%{transform:translate(60px,-50px) scale(1.1)} 50%{transform:translate(-40px,40px) scale(0.92)} 75%{transform:translate(50px,20px) scale(1.08)} 100%{transform:translate(0,0) scale(1)} }
+@keyframes float-drift { 0%{transform:translate(0,0) scale(1) rotate(0deg)} 33%{transform:translate(-50px,-60px) scale(1.14) rotate(3deg)} 66%{transform:translate(40px,30px) scale(0.88) rotate(-2deg)} 100%{transform:translate(0,0) scale(1) rotate(0deg)} }
+@keyframes float       { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+
+.gradient-mesh { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
+.blob { position: absolute; border-radius: 50%; filter: blur(90px); animation: float-slow 12s ease-in-out infinite; }
+.blob:nth-child(2) { animation: float-drift 16s ease-in-out infinite; }
+.blob:nth-child(3) { animation: float-slow 20s ease-in-out infinite reverse; }
+
+/* ── REVEAL ── */
+.reveal { opacity: 0; transform: translateY(16px); }
+
+/* ── GLOW ── */
+@keyframes glow-pulse {
+    0%,100% { text-shadow: 0 0 24px rgba(88,166,255,0.5), 0 0 48px rgba(88,166,255,0.2); }
+    50%     { text-shadow: 0 0 36px rgba(88,166,255,0.85), 0 0 72px rgba(88,166,255,0.38); }
+}
+.glow-pulse { animation: glow-pulse 3s ease-in-out infinite; }
+.stat-glow  { text-shadow: 0 0 28px rgba(63,185,80,0.7), 0 0 56px rgba(63,185,80,0.3); }
+
+/* ── SECTION LABEL ── */
+.section-label {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.67rem; letter-spacing: 0.24em; text-transform: uppercase;
+    margin-bottom: 0.65rem;
+}
+.section-label::before {
+    content: ''; display: block; width: 24px; height: 1px;
+    background: currentColor; opacity: 0.5; flex-shrink: 0;
+}
+.section-label::after {
+    content: ''; display: block; flex: 1; height: 1px;
+    background: currentColor; opacity: 0.08;
+}
+
+/* ── CARDS ── */
+.card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    border-color: rgba(255,255,255,0.12);
+}
+.card-blue   { background: rgba(88,166,255,0.05);  border-color: rgba(88,166,255,0.15); }
+.card-blue:hover   { border-color: rgba(88,166,255,0.32);  box-shadow: 0 10px 30px rgba(88,166,255,0.12); }
+.card-green  { background: rgba(63,185,80,0.05);   border-color: rgba(63,185,80,0.15); }
+.card-green:hover  { border-color: rgba(63,185,80,0.32);   box-shadow: 0 10px 30px rgba(63,185,80,0.12); }
+.card-orange { background: rgba(167,139,250,0.05); border-color: rgba(167,139,250,0.15); }
+.card-orange:hover { border-color: rgba(167,139,250,0.32); box-shadow: 0 10px 30px rgba(167,139,250,0.12); }
+
+.card-featured {
+    position: relative; border-radius: 12px; padding: 18px;
+    background: var(--surface);
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+.card-featured::before {
+    content: ''; position: absolute; inset: 0;
+    border-radius: 12px; padding: 1px;
+    background: linear-gradient(135deg, rgba(88,166,255,0.45), rgba(63,185,80,0.22), rgba(88,166,255,0.06));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events: none;
+}
+.card-featured:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(88,166,255,0.12); }
+
+/* ── CALLOUT ── */
+.callout { padding: 14px 18px; border-radius: 0 10px 10px 0; border-left: 3px solid; }
+
+/* ── CODE BLOCK ── */
+.code-block {
+    background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px; padding: 14px 18px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.code-block .cb-header {
+    display: flex; align-items: center; gap: 6px;
+    padding-bottom: 10px; margin-bottom: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.cb-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* ── MONO / TAG / LOGO ── */
+.mono { font-family: 'JetBrains Mono', monospace; }
+.tag { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.logo-box {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 80px; height: 80px; border-radius: 22px;
+    background: linear-gradient(135deg, rgba(88,166,255,0.18), rgba(63,185,80,0.12));
+    border: 1px solid rgba(88,166,255,0.35);
+    font-size: 2rem; backdrop-filter: blur(12px);
+    box-shadow: 0 0 48px rgba(88,166,255,0.22), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+/* ── HOOK BOXES ── */
+.hook-row { display: flex; align-items: stretch; gap: 20px; }
+.hook-box {
+    flex: 1; padding: 28px 32px; border-radius: 12px;
+    border: 1px solid; display: flex; flex-direction: column; gap: 10px;
+}
+.hook-box .hb-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.7; }
+.hook-box .hb-value { font-family: 'JetBrains Mono', monospace; font-size: clamp(2.8rem,6vw,4.4rem); font-weight: 700; line-height: 1; letter-spacing: -0.03em; }
+
+/* ── PROBLEM COLUMNS ── */
+.prob-col ul { list-style: none; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 2.05; color: var(--text-3); }
+.prob-col ul li::before { content: '- '; color: var(--text-3); }
+
+/* ── WHY NOW ROWS ── */
+.why-row { display: flex; align-items: baseline; gap: 28px; padding-bottom: 22px; border-bottom: 1px solid var(--border); }
+.why-row:last-child { border-bottom: none; padding-bottom: 0; }
+.why-num { font-family: 'JetBrains Mono', monospace; font-size: 2.8rem; font-weight: 700; letter-spacing: -0.04em; line-height: 1; min-width: 60px; }
+
+/* ── BARS ── */
+.bar-track { background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; height: 9px; }
+.bar-fill  { height: 100%; border-radius: 4px; width: 0; transition: width 0.85s ease; }
+
+/* ── COMP TABLE ── */
+.comp-table { border-collapse: separate; border-spacing: 0; width: 100%; }
+.comp-table th {
+    padding: 10px 14px; font-size: 0.73rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3);
+    background: rgba(255,255,255,0.04);
+}
+.comp-table th:first-child { border-radius: 10px 0 0 0; text-align: left; }
+.comp-table th:not(:first-child) { text-align: center; }
+.comp-table th:last-child { border-radius: 0 10px 0 0; }
+.comp-table td { padding: 10px 14px; font-size: 0.82rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.comp-table td:not(:first-child) { text-align: center; }
+.comp-table tr:last-child td { border-bottom: none; }
+.comp-table tr:last-child td:first-child { border-radius: 0 0 0 10px; }
+.comp-table tr:last-child td:last-child  { border-radius: 0 0 10px 0; }
+.comp-table .row-us { background: rgba(63,185,80,0.06); }
+.comp-table tr:not(.row-us):hover td { background: rgba(255,255,255,0.025); transition: background 0.15s; }
+
+.ck { display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:rgba(63,185,80,0.18);border:1px solid rgba(63,185,80,0.35);border-radius:50%;color:var(--green);font-size:0.75rem;font-weight:700;line-height:1;padding:0;text-indent:0; }
+.cx { display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.3);border-radius:50%;color:var(--orange);font-size:0.75rem;font-weight:700;line-height:1;padding:0;text-indent:0; }
+.cm { display:inline-flex;align-items:center;justify-content:center;padding:0 8px;height:22px;background:rgba(167,139,250,0.12);border-radius:11px;color:var(--orange);font-size:0.65rem;font-weight:600;white-space:nowrap;letter-spacing:0.01em; }
+
+/* ── TEAM ── */
+.team-card { transition: transform 0.22s ease, box-shadow 0.22s ease; }
+.team-card:hover { transform: translateY(-4px); box-shadow: 0 14px 36px rgba(0,0,0,0.45); }
+.avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; font-weight: 700; color: #090d12;
+    font-family: 'Archivo Black', sans-serif; flex-shrink: 0;
+}
+
+/* ── NAV ── */
+.nav-controls {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 12px; z-index: 200;
+    background: rgba(17,24,32,0.82); backdrop-filter: blur(18px);
+    padding: 8px 20px; border-radius: 40px;
+    border: 1px solid rgba(255,255,255,0.09);
+    box-shadow: 0 4px 28px rgba(0,0,0,0.45);
+}
+.nav-btn {
+    width: 32px; height: 32px; border: none; background: transparent;
+    color: var(--blue); border-radius: 50%; font-size: 1.05rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+}
+.nav-btn:hover { background: rgba(88,166,255,0.12); }
+.slide-dots { display: flex; gap: 5px; align-items: center; }
+.slide-dots .dot {
+    height: 8px; width: 8px; border-radius: 4px;
+    background: rgba(255,255,255,0.1); cursor: pointer;
+    transition: background 0.3s, width 0.3s;
+}
+.slide-dots .dot.active { background: var(--blue); width: 24px; }
+.nav-sep { width: 1px; height: 18px; background: rgba(255,255,255,0.09); }
+.slide-counter { font-size: 0.7rem; color: var(--text-3); min-width: 34px; text-align: center; font-family: 'JetBrains Mono', monospace; }
+
+/* ── CTA BUTTONS ── */
+.cta-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 22px; border-radius: 10px; border: 1px solid;
+    font-weight: 600; font-size: 0.88rem; text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.cta-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+
+/* ── STRIKETHROUGH ANIMATION ── */
+.strike-anim { position: relative; }
+.strike-anim::after {
+    content: ''; position: absolute; left: -3%; right: -3%; top: 54%;
+    height: 3px; background: var(--orange); border-radius: 2px;
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 1s var(--ease) 0.8s;
+}
+.slide.active .strike-anim::after { transform: scaleX(1); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+    .slide > .content { padding: clamp(1rem, 3vw, 2rem); }
+    .hook-row { flex-direction: column; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- Progress bar -->
+<div id="progress-bar"></div>
+<!-- Mouse spotlight -->
+<div id="spotlight" style="position:fixed;inset:0;z-index:99;pointer-events:none;"></div>
+
+<div class="deck">
+
+<!-- ═══════════════════════════════════════
+     SLIDE 1 - TITLE
+═══════════════════════════════════════ -->
+<div class="slide active" data-slide="1">
+    <div class="grid-bg"></div>
+    <div class="gradient-mesh">
+        <div class="blob" style="width:520px;height:520px;top:-140px;right:-100px;background:#58a6ff;opacity:0.10;"></div>
+        <div class="blob" style="width:320px;height:320px;bottom:-80px;left:-60px;background:#3fb950;opacity:0.09;"></div>
+        <div class="blob" style="width:220px;height:220px;top:38%;left:12%;background:#a78bfa;opacity:0.07;"></div>
+    </div>
+    <canvas class="particle-canvas" style="position:absolute;inset:0;z-index:2;width:100%;height:100%;"></canvas>
+    <div class="content" style="text-align:center;">
+        <!-- Logo + Typed CLI -->
+        <div class="reveal" style="margin-bottom:1.2rem;"><div class="logo-box" style="animation:float 3.5s ease-in-out infinite;">&#9881;</div></div>
+        <div class="mono reveal" id="typed-cli" style="color:var(--blue);font-size:0.85rem;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:0.8rem;min-height:1.4em;"></div>
+
+        <!-- Brand name -->
+        <h1 class="reveal" style="font-family:'Archivo Black',sans-serif;font-size:clamp(3rem,7vw,5.5rem);background:linear-gradient(135deg,#58a6ff,#3fb950,#58a6ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.05;margin-bottom:1.6rem;">usectl</h1>
+
+        <!-- Taglines -->
+        <div class="reveal" style="max-width:640px;margin:0 auto 2rem;">
+            <p style="font-size:clamp(1.1rem,2.1vw,1.45rem);color:var(--text);line-height:1.6;font-weight:500;margin-bottom:0.6rem;">Flat-priced deployment platform for AI-assisted developers</p>
+            <p style="font-size:clamp(0.88rem,1.5vw,1.02rem);color:var(--text-2);line-height:1.6;font-weight:400;">Your agent ships the feature. You get the week back.</p>
+        </div>
+
+        <!-- Tags -->
+        <div class="reveal" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:2.2rem;">
+            <span class="tag" style="background:rgba(88,166,255,0.1);color:var(--blue);border:1px solid rgba(88,166,255,0.22);">Developer Tools</span>
+            <span class="tag" style="background:rgba(63,185,80,0.1);color:var(--green);border:1px solid rgba(63,185,80,0.22);">Deployment / Infrastructure</span>
+            <span class="tag" style="background:rgba(167,139,250,0.1);color:var(--orange);border:1px solid rgba(167,139,250,0.22);">Pre-Seed &middot; Tbilisi, GE</span>
+        </div>
+
+        <div class="reveal mono" style="font-size:0.68rem;color:var(--text-3);letter-spacing:0.1em;">&larr; &rarr; to navigate &nbsp;&middot;&nbsp; space to advance</div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 2 - THE HOOK
+═══════════════════════════════════════ -->
+<div class="slide" data-slide="2">
+    <div class="grid-bg"></div>
+    <div class="gradient-mesh">
+        <div class="blob" style="width:400px;height:400px;top:-100px;right:-80px;background:#a78bfa;opacity:0.08;"></div>
+        <div class="blob" style="width:280px;height:280px;bottom:-60px;left:-50px;background:#58a6ff;opacity:0.07;"></div>
+    </div>
+    <div class="content">
+        <div class="section-label reveal" style="color:var(--orange);">// 01 - The Hook</div>
+        <h2 class="reveal" style="font-family:'Archivo Black',sans-serif;font-size:clamp(1.7rem,3.6vw,2.7rem);margin-bottom:0.5rem;line-height:1.2;">Your agent wrote the feature in <span style="color:var(--green);">5 minutes.</span></h2>
+        <p class="reveal" style="font-size:clamp(1.1rem,2.2vw,1.5rem);color:var(--text-2);margin-bottom:1.6rem;line-height:1.3;">You will spend <span style="color:var(--orange);">4 hours</span> deploying it. The math is <span style="color:var(--orange);font-weight:700;">broken.</span></p>
+
+        <div class="hook-row reveal" style="margin-bottom:1.6rem;">
+            <div class="hook-box" style="border-color:rgba(63,185,80,0.25);background:rgba(63,185,80,0.06);">
+                <div class="hb-label" style="color:var(--green);">Agent time to ship feature</div>
+                <div class="hb-value" style="color:var(--green);">00:05</div>
+                <div style="font-size:0.78rem;color:var(--text-3);">Cursor / Claude Code / Codex</div>
+            </div>
+            <div style="display:flex;align-items:center;font-size:1.6rem;color:var(--text-3);flex-shrink:0;">&rarr;</div>
+            <div class="hook-box" style="border-color:rgba(167,139,250,0.3);background:rgba(167,139,250,0.06);">
+                <div class="hb-label" style="color:var(--orange);">Developer time to deploy</div>
+                <div class="hb-value" style="color:var(--orange);">04:00</div>
+                <div style="font-size:0.78rem;color:var(--text-3);">Docker, K8s, DNS, SSL, Postgres, Redis, S3, env vars, CI/CD, monitoring</div>
+            </div>
+        </div>
+
+        <div class="callout reveal" style="background:rgba(88,166,255,0.06);border-left-color:var(--blue);">
+            <span style="font-size:clamp(0.92rem,1.8vw,1.15rem);color:var(--text);font-weight:500;line-height:1.55;">AI made coding <span style="color:var(--blue);font-weight:700;">10x faster.</span> The infrastructure around it didn't move. That gap is our market.</span>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 3 - THE PROBLEM
+═══════════════════════════════════════ -->
+<div class="slide" data-slide="3">
+    <div class="grid-bg"></div>
+    <div class="gradient-mesh">
+        <div class="blob" style="width:400px;height:400px;top:-100px;left:-80px;background:#a78bfa;opacity:0.08;"></div>
+        <div class="blob" style="width:280px;height:280px;bottom:-60px;right:-40px;background:#58a6ff;opacity:0.06;"></div>
+    </div>
+    <div class="content">
+        <div class="section-label reveal" style="color:var(--orange);">// 02 - Problem</div>
+        <h2 class="reveal" style="font-family:'Archivo Black',sans-serif;font-size:clamp(1.6rem,3.3vw,2.5rem);margin-bottom:0.5rem;line-height:1.2;">Deploying is the easy part.<br><span style="color:var(--orange);">Growing with it is where you get stuck.</span></h2>
+        <p class="reveal" style="color:var(--text-3);font-size:0.88rem;margin-bottom:1.4rem;">You can push code to any platform. But the moment you need a database, a queue, staging environments, or to scale - you're on your own, managing infrastructure by hand.</p>
+
+        <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:1.4rem;">
+            <div class="prob-col">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:0.67rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--orange);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);">Ship</div>
+                <ul>
+                    <li>Dockerfile</li>
+                    <li>CI/CD pipeline</li>
+                    <li>Kubernetes / Helm</li>
+                    <li>Blue-green rollouts</li>
+                    <li>PR preview envs</li>
+                </ul>
+            </div>
+            <div class="prob-col">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:0.67rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--orange);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);">Scale</div>
+                <ul>
+                    <li>Postgres + Redis</li>
+                    <li>Object storage + IAM</li>
+                    <li>Messaging queues</li>
+                    <li>Backups + restores</li>
+                    <li>Staging, prod, sandboxes</li>
+                </ul>
+            </div>
+            <div class="prob-col">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:0.67rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--orange);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);">Maintain</div>
+                <ul>
+                    <li>Logs + metrics + alerts</li>
+                    <li>Secrets + env vars</li>
+                    <li>DNS + SSL certs</li>
+                    <li>Updates + rollbacks</li>
+                    <li>Config drift</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="callout reveal" style="background:rgba(167,139,250,0.07);border-left-color:var(--orange);">
+            <span style="color:var(--orange);font-weight:600;">Every competitor meters your success.</span>
+            <span style="color:var(--text-2);font-size:0.88rem;"> Vercel has 9 billing meters. Railway bills per second. Render charges per seat. The developer who ships to Hacker News and goes viral pays 3-6x their normal bill.</span>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 4 - THE SOLUTION
+═══════════════════════════════════════ -->
+<div class="slide" data-slide="4">
+    <div class="grid-bg"></div>
+    <div class="gradient-mesh">
+        <div class="blob" style="width:450px;height:450px;top:-120px;right:-80px;background:#3fb950;opacity:0.09;"></div>
+        <div class="blob" style="width:260px;height:260px;bottom:-60px;left:-40px;background:#58a6ff;opacity:0.07;"></div>
+    </div>
+    <div class="content">
+        <div class="section-label reveal" style="color:var(--green);">// 03 - Solution</div>
+        <h2 class="reveal" style="font-family:'Archivo Black',sans-serif;font-size:clamp(1.6rem,3.3vw,2.5rem);margin-bottom:0.5rem;line-height:1.2;">One CLI. <span style="color:var(--green);">Your agent runs the whole stack.</span></h2>
+        <p class="reveal" style="color:var(--text-3);font-size:0.88rem;margin-bottom:1.5rem;max-width:720px;line-height:1.65;">usectl is a fully managed deployment platform built on serious Kubernetes infrastructure, giving you the control and flexibility of self-hosting without the operational overhead. CLI, MCP server, and dashboard are all peers - your AI agent deploys, provisions databases, manages domains, and reads logs without a human in the loop.</p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:1.4rem;">
+            <div class="card card-green reveal" style="padding:16px 18px;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;font-weight:600;color:var(--green);margin-bottom:8px;">usectl machines <span style="color:var(--text-3);font-weight:400;">create / deploy</span></div>
+                <div style="font-size:0.78rem;color:var(--text-3);line-height:1.55;">Push a repo, agent picks the runtime, ships the code. Blue-green rollout, instant rollback.</div>
+            </div>
+            <div class="card card-green reveal" style="padding:16px 18px;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;font-weight:600;color:var(--green);margin-bottom:8px;">usectl addons <span style="color:var(--text-3);font-weight:400;">add postgres / redis / s3</span></div>
+                <div style="font-size:0.78rem;color:var(--text-3);line-height:1.55;">Managed Postgres, Redis, MongoDB, NATS, S3-compatible storage - provisioned in seconds.</div>
+            </div>
+            <div class="card card-green reveal" style="padding:16px 18px;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;font-weight:600;color:var(--green);margin-bottom:8px;">usectl envs <span style="color:var(--text-3);font-weight:400;">set / vars set</span></div>
+                <div style="font-size:0.78rem;color:var(--text-3);line-height:1.55;">Runtime and build-time config, per-app overrides. Secrets managed, not scattered.</div>
+            </div>
+            <div class="card card-green reveal" style="padding:16px 18px;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;font-weight:600;color:var(--green);margin-bottom:8px;">usectl logs <span style="color:var(--text-3);font-weight:400;">follow / status</span></div>
+                <div style="font-size:0.78rem;color:var(--text-3);line-height:1.55;">Read live logs, diagnose issues, heal at runtime. The agent debugs production.</div>
+            </div>
+            <div class="card card-green reveal" style="padding:16px 18px;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;font-weight:600;color:var(--green);margin-bottom:8px;">usectl domains <span style="color:var(--text-3);font-weight:400;">add / verify</span></div>
+                <div style="font-size:0.78rem;color:var(--text-3);line-height:1.55;">Custom domains, DNS, Cloudflare SSL - auto-renewed, zero config.</div>
+            </div>
+            <div class="card card-green reveal" style="padding:16px 18px;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;font-weight:600;color:var(--green);margin-bottom:8px;">usectl machines <span style="color:var(--text-3);font-weight:400;">pr-preview</span></div>
+                <div style="font-size:0.78rem;color:var(--text-3);line-height:1.55;">Every PR gets its own live URL with isolated namespace. Auto-torn-down on merge.</div>
+            </div>
+        </div>
+
+        <div class="callout reveal" style="background:rgba(63,185,80,0.06);border-left-color:var(--green);">
+            <span style="color:var(--green);font-weight:600;">Your agent doesn't just deploy. It runs the whole stack.</span>
+            <span style="color:var(--text-2);font-size:0.88rem;"> You get the week back - not just the deploy hour.</span>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 5 - WHY NOW
+═══════════════════════════════════════ -->
+<div class="slide" data-slide="5">
+    <div class="grid-bg"></div>
+    <div class="gradient-mesh">
+        <div class="blob" style="width:420px;height:420px;top:-110px;right:-85px;background:#58a6ff;opacity:0.09;"></div>
+        <div class="blob" style="width:290px;height:290px;bottom:-65px;left:-45px;background:#3fb950;opacity:0.07;"></div>
+    </div>
+    <canvas class="particle-canvas-ambient" style="position:absolute;inset:0;z-index:2;width:100%;height:100%;"></canvas>
+    <div class="content">
+        <div class="section-label reveal" style="color:var(--blue);">// 04 - Why Now</div>
+        <h2 class="reveal" style="font-family:'Archivo Black',sans-serif;font-size:clamp(1.6rem,3.2vw,2.4rem);margin-bottom:1.6rem;line-height:1.2;">Three shifts happened at once.<br><span style="color:var(--blue);">The category is being rebuilt.</span></h2>
+
+        <div style="display:flex;flex-direction:column;gap:0;margin-bottom:1.5rem;">
+            <div class="why-row reveal">
+                <div class="why-num" style="color:var(--blue);">01</div>
+                <div>
+                    <div style="font-size:1.05rem;font-weight:600;color:var(--text);margin-bottom:4px;letter-spacing:-0.01em;">Agents got capable enough to ship production code.</div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:0.76rem;color:var(--text-3);">Claude 4, GPT-5, Cursor - coding agents commit, test, and open PRs. They are no longer toys.</div>
+                </div>
+            </div>
+            <div class="why-row reveal">
+                <div class="why-num" style="color:var(--green);">02</div>
+                <div>
+                    <div style="font-size:1.05rem;font-weight:600;color:var(--text);margin-bottom:4px;letter-spacing:-0.01em;">Agent-native protocols emerged.</div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:0.76rem;color:var(--text-3);">MCP from Anthropic. UCP and ACP for discovery. usectl exposes every infrastructure operation as an MCP tool - agents call it natively.</div>
+                </div>
+            </div>
+            <div class="why-row reveal">
+                <div class="why-num" style="color:var(--orange);">03</div>
+                <div>
+                    <div style="font-size:1.05rem;font-weight:600;color:var(--text);margin-bottom:4px;letter-spacing:-0.01em;">Bare metal economics broke the cloud pricing model.</div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:0.76rem;color:var(--text-3);">A Hetzner AX163 (~&#8364;140/mo) outperforms an AWS c6i.8xlarge ($1,100/mo). Owning the metal is a structural advantage, not just an ops choice.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="callout reveal" style="background:rgba(88,166,255,0.06);border-left-color:var(--blue);">
+            <span style="color:var(--blue);font-weight:600;">Nobody rebuilt the deploy layer for agents yet.</span>
+            <span style="color:var(--text-3);font-size:0.84rem;"> Existing platforms were designed for humans with web browsers. That gap is exactly where usectl sits.</span>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 6 - FULL-STACK SUBSTRATE
+═══════════════════════════════════════ -->
+<div class="slide" data-slide="6">
+    <div class="grid-bg"></div>
+    <div class="gradient-mesh">
+        <div class="blob" style="width:400px;height:400px;top:-100px;right:-80px;background:#58a6ff;opacity:0.08;"></div>
+        <div class="blob" style="width:280px;height:280px;bottom:-70px;left:-50px;background:#a78bfa;opacity:0.06;"></div>
+    </div>
+    <div class="content">
+        <div class="section-label reveal" style="color:var(--blue);">// 05 - Product</div>
+        <h2 class="reveal" style="font-family:'Archivo Black',sans-serif;font-size:clamp(1.5rem,3vw,2.3rem);margin-bottom:0.35rem;">8 managed addons. <span style="color:var(--blue);">One predictable bill.</span></h2>
+        <p class="reveal" style="color:var(--text-3);font-size:0.88rem;margin-bottom:1.2rem;">Competitors bundle 3-5 primitives and meter each one. We include 8 first-party services - flat, managed, and shareable across projects.</p>
+
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.2rem;">
+            <div class="card reveal" style="text-align:center;padding:14px 12px;">
+                <div style="font-size:1.5rem;margin-bottom:5px;">&#128024;</div>
+                <div style="font-size:0.78rem;font-weight:600;color:var(--text-2);">PostgreSQL</div>
+                <div style="font-size:0.67rem;color:var(--text-3);margin-top:3px;">CloudNativePG</div>
+            </div>
+            <div class="card reveal" style="text-align:center;padding:14px 12px;">
+                <div style="font-size:1.5rem;margin-bottom:5px;">&#9889;</div>
+                <div style="font-size:0.78rem;font-weight:600;color:var(--text-2);">Redis</div>
+                <div style="font-size:0.67rem;color:var(--text-3);margin-top:3px;">ACL-isolated</div>
+            </div>
+            <div class="card reveal" style="text-align:center;padding:14px 12px;">
+                <div style="font-size:1.5rem;margin-bottom:5px;">&#128230;</div>
+                <div style="font-size:0.78rem;font-weight:600;color:var(--text-2);">Object Storage</div>
+                <div style="font-size:0.67rem;color:var(--text-3);margin-top:3px;">SeaweedFS - S3-compatible</div>
+            </div>
+            <div class="card reveal" style="text-align:center;padding:14px 12px;">
+                <div style="font-size:1.5rem;margin-bottom:5px;">&#127811;</div>
+                <div style="font-size:0.78rem;font-weight:600;color:var(--text-2);">MongoDB</div>
+                <div style="font-size:0.67rem;color:var(--text-3);margin-top:3px;">RBAC isolation</div>
+            </div>
+            <div class="card reveal" style="text-align:center;padding:14px 12px;">
+                <div style="font-size:1.5rem;margin-bottom:5px;">&#128311;</div>
+                <div style="font-size:0.78rem;font-weight:600;color:var(--text-2);">SQL Server</div>
+                <div style="font-size:0.67rem;color:var(--text-3);margin-top:3px;">Legacy bridge</div>
+            </div>
+            <div class="card reveal" style="text-align:center;padding:14px 12px;">
+                <div style="font-size:1.5rem;margin-bottom:5px;">&#128225;</div>
+                <div style="font-size:0.78rem;font-weight:600;color:var(--text-2);">Messaging</div>
+                <div style="font-size:0.67rem;color:var(--text-3);margin-top:3px;">NATS</div>
+            </div>
+            <div class="card reveal" style="text-align:center;padding:14px 12px;">
+                <div style="font-size:1.5rem;margin-bottom:5px;">&#9200;</div>
+                <div style="font-size:0.78rem;font-weight:600;color:var(--text-2);">Cron Jobs</div>
+                <div style="font-size:0.67rem;color:var(--text-3);margin-top:3px;">K8s CronJobs</div>
+            </div>
+            <div class="card reveal" style="text-align:center;padding:14px 12px;">
+                <div style="font-size:1.5rem;margin-bottom:5px;">&#128273;</div>
+                <div style="font-size:0.78rem;font-weight:600;color:var(--text-2);">OAuth2 Proxy</div>
+                <div style="font-size:0.67rem;color:var(--text-3);margin-top:3px;">GitHub / Google</div>
+            </div>
+        </div>
+
+        <div class="callout reveal" style="background:rgba(63,185,80,0.05);border-left-color:var(--green);">
+            <span style="color:var(--green);font-weight:600;font-size:0.85rem;">Shared addons across projects</span>
+            <span style="color:var(--text-3);font-size:0.82rem;"> - one Postgres shared across 5 microservices. One Redis for all. No extra charge. Nobody else's pricing supports this.</span>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 7 - MARKET OPPORTUNITY
+═══════════════════════════════════════ -->
+<div class="slide" data-slide="7">
+    <div class="grid-bg"></div>
+    <div class="gradient-mesh">
+        <div class="blob" style="width:460px;height:460px;top:-120px;right:-90px;background:#58a6ff;opacity:0.09;"></div>
+        <div class="blob" style="width:300px;height:300px;bottom:-70px;left:-50px;background:#3fb950;opacity:0.07;"></div>
+    </div>
+    <canvas class="particle-canvas-ambient" style="position:absolute;inset:0;z-index:2;width:100%;height:100%;"></canvas>
+    <div class="content">
+        <div class="section-label reveal" style="color:var(--blue);">// 06 - Market</div>
+        <h2 class="reveal" style="font-family:'Archivo Black',sans-serif;font-size:clamp(1.5rem,3vw,2.3rem);margin-bottom:1.4rem;line-height:1.2;">$200B+ in cloud infrastructure.<br><span style="color:var(--blue);">Entering its agent-native era.</span></h2>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:1.4rem;">
+            <div class="card-featured reveal" style="padding:22px;text-align:center;">
+                <div class="mono glow-pulse" style="font-size:2.2rem;font-weight:700;color:var(--blue);margin-bottom:6px;">$100B+</div>
+                <div style="font-weight:600;font-size:0.82rem;margin-bottom:5px;color:var(--text-2);">Cloud Platform TAM (2025)</div>
+                <div style="font-size:0.75rem;color:var(--text-3);line-height:1.5;">Global deployment platform market, growing 20%+ YoY</div>
+            </div>
+            <div class="card-featured reveal" style="padding:22px;text-align:center;">
+                <div class="mono" style="font-size:2.2rem;font-weight:700;color:var(--green);margin-bottom:6px;text-shadow:0 0 28px rgba(63,185,80,0.65);">30M+</div>
+                <div style="font-weight:600;font-size:0.82rem;margin-bottom:5px;color:var(--text-2);">Global Software Developers</div>
+                <div style="font-size:0.75rem;color:var(--text-3);line-height:1.5;">AI-assisted developers growing 40%+ YoY as Cursor and Claude Code adoption accelerates</div>
+            </div>
+            <div class="card-featured reveal" style="padding:22px;text-align:center;">
+                <div class="mono" style="font-size:2.2rem;font-weight:700;color:var(--orange);margin-bottom:6px;text-shadow:0 0 28px rgba(167,139,250,0.65);">$50-200</div>
+                <div style="font-weight:600;font-size:0.82rem;margin-bottom:5px;color:var(--text-2);">Realistic ARPU / Team / Month</div>
+                <div style="font-size:0.75rem;color:var(--text-3);line-height:1.5;">At 1% penetration of AI-assisted dev teams: $60-240M ARR opportunity</div>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="card reveal">
+                <div style="font-weight:600;font-size:0.85rem;margin-bottom:8px;color:var(--text-2);">&#127919; Our Beachhead</div>
+                <div style="font-size:0.8rem;color:var(--text-3);line-height:1.58;">AI-assisted developers (Cursor / Claude Code users) shipping full-stack apps in EU and US. Estimated 2-5M developers today - the people who feel the 4-hour gap every single week.</div>
+            </div>
+            <div class="card reveal">
+                <div style="font-weight:600;font-size:0.85rem;margin-bottom:8px;color:var(--text-2);">&#128200; Expansion Path</div>
+                <div style="font-size:0.8rem;color:var(--text-3);line-height:1.58;">Today: indie builders and small teams. 18 months: most teams shipping with AI coding tools. 3 years: default infrastructure layer for agent-driven development workflows.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 8 - BUSINESS MODEL
+═══════════════════════════════════════ -->
+<div class="slide" data-slide="8">
+    <div class="grid-bg"></div>
+    <div class="gradient-mesh">
+        <div class="blob" style="width:380px;height:380px;top:-90px;left:-70px;background:#3fb950;opacity:0.08;"></div>
+        <div class="blob" style="width:260px;height:260px;bottom:-60px;right:-40px;background:#58a6ff;opacity:0.06;"></div>
+    </div>
+    <div class="content">
+        <div class="section-label reveal" style="color:var(--green);">// 07 - Business Model</div>
+        <h2 class="reveal" style="font-family:'Archivo Black',sans-serif;font-size:clamp(1.5rem,3vw,2.3rem);margin-bottom:1.4rem;line-height:1.2;">Your bill is a formula,<br><span style="color:var(--green);">not a surprise.</span></h2>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:1.4rem;">
+            <div class="card-featured reveal" style="padding:22px;">
+                <div style="font-weight:700;font-size:0.88rem;margin-bottom:14px;color:var(--green);">&#128161; The Pricing Formula</div>
+                <div class="code-block" style="margin-bottom:12px;">
+                    <div class="cb-header">
+                        <span class="cb-dot" style="background:#ff5f56;"></span>
+                        <span class="cb-dot" style="background:#ffbd2e;"></span>
+                        <span class="cb-dot" style="background:#27c93f;"></span>
+                        <span style="font-size:0.67rem;color:var(--text-3);margin-left:6px;letter-spacing:0.05em;">pricing.formula</span>
+                    </div>
+                    <div style="font-size:1rem;color:var(--text);line-height:2.2;">
+                        <span style="color:var(--blue);">$10</span> <span style="color:var(--text-3);">x</span> <span style="color:var(--text-2);">vCPU</span><br>
+                        <span style="color:var(--text-3);">+  </span><span style="color:var(--blue);">$5</span><span style="color:var(--text-3);">  x</span> <span style="color:var(--text-2);">vRAM <span style="color:var(--text-3);font-size:0.8em;">(GB)</span></span><br>
+                        <span style="color:var(--text-3);">+  </span><span style="color:var(--blue);">$0.01</span><span style="color:var(--text-3);"> x</span> <span style="color:var(--text-2);">Storage <span style="color:var(--text-3);font-size:0.8em;">(GB)</span></span>
+                    </div>
+                </div>
+                <div style="font-size:0.78rem;color:var(--text-3);">Pick the exact resources you need via slider. No tiers to round up to. All addons included flat.</div>
+            </div>
+            <div class="card reveal" style="padding:22px;display:flex;flex-direction:column;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+                    <span style="font-size:1rem;line-height:1;flex-shrink:0;">&#128202;</span>
+                    <span style="font-weight:700;font-size:0.88rem;color:var(--text-2);">Example Bills</span>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;">
+                    <div style="padding:8px 0;">
+                        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px;">
+                            <span style="font-size:0.86rem;color:var(--text-3);">Solo dev &middot; 1 vCPU / 2 GB / 20 GB</span>
+                            <span style="font-weight:700;color:var(--green);font-family:'JetBrains Mono',monospace;font-size:0.94rem;">$20.20/mo</span>
+                        </div>
+                        <div class="bar-track"><div class="bar-fill" data-width="20" style="background:linear-gradient(90deg,var(--green),rgba(63,185,80,0.45));"></div></div>
+                    </div>
+                    <div style="padding:8px 0;">
+                        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px;">
+                            <span style="font-size:0.86rem;color:var(--text-3);">Small team &middot; 2 vCPU / 4 GB / 50 GB</span>
+                            <span style="font-weight:700;color:var(--green);font-family:'JetBrains Mono',monospace;font-size:0.94rem;">$50.50/mo</span>
+                        </div>
+                        <div class="bar-track"><div class="bar-fill" data-width="50" style="background:linear-gradient(90deg,var(--blue),rgba(88,166,255,0.45));"></div></div>
+                    </div>
+                    <div style="padding:8px 0;">
+                        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px;">
+                            <span style="font-size:0.86rem;color:var(--text-3);">Startup &middot; 4 vCPU / 8 GB / 100 GB</span>
+                            <span style="font-weight:700;color:var(--green);font-family:'JetBrains Mono',monospace;font-size:0.94rem;">$102/mo</span>
+                        </div>
+                        <div class="bar-track"><div class="bar-fill" data-width="100" style="background:linear-gradient(90deg,var(--orange),rgba(167,139,250,0.45));"></div></div>
+                    </div>
+                </div>
+                <div style="font-size:0.78rem;color:var(--blue);font-weight:500;margin-top:14px;">Unlimited team members. No per-seat charge. Ever.</div>
+            </div>
+        </div>
+
+        <div class="card reveal" style="padding:14px 18px;">
+            <span style="font-weight:600;font-size:0.85rem;color:var(--text-2);">&#128170; Why flat pricing is sustainable: </span>
+            <span style="font-size:0.82rem;color:var(--text-3);">We own Hetzner AX-series bare metal (32-48 cores, 128-256 GB RAM per machine). Fixed monthly cost. Marginal cost per customer <span style="color:var(--text-2);font-weight:500;">falls</span> as utilization rises. Competitors on AWS/GCP can never do this - their substrate meters them.</span>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 9 - COMPETITIVE LANDSCAPE
+═══════════════════════════════════════ -->
+<div class="slide" data-slide="9">
+    <div class="grid-bg"></div>
+    <div class="gradient-mesh">
+        <div class="blob" style="width:400px;height:400px;top:-100px;right:-80px;background:#a78bfa;opacity:0.07;"></div>
+        <div class="blob" style="width:270px;height:270px;bottom:-60px;left:-40px;background:#58a6ff;opacity:0.06;"></div>
+    </div>
+    <div class="content">
+        <div class="section-label reveal" style="color:var(--orange);">// 08 - Competition</div>
+        <h2 class="reveal" style="font-family:'Archivo Black',sans-serif;font-size:clamp(1.5rem,3vw,2.2rem);margin-bottom:1.2rem;">Same category.<br><span style="color:var(--orange);">Completely different economics.</span></h2>
+
+        <div class="reveal" style="border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1.2rem;background:var(--surface);">
+            <table class="comp-table">
+                <thead>
+                    <tr>
+                        <th>Platform</th>
+                        <th>Flat pricing</th>
+                        <th>Full stack</th>
+                        <th>AI-native CLI</th>
+                        <th>No lock-in</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="row-us">
+                        <td style="font-weight:700;color:var(--green);"><span style="display:inline-flex;align-items:center;gap:9px;"><span style="width:20px;text-align:center;font-size:1rem;flex-shrink:0;">&#9881;</span>usectl</span></td>
+                        <td><span class="ck">&#10003;</span></td>
+                        <td><span class="ck">&#10003;</span></td>
+                        <td><span class="ck">&#10003;</span></td>
+                        <td><span class="ck">&#10003;</span></td>
+                    </tr>
+                    <tr>
+                        <td style="color:var(--text-2);"><span style="display:inline-flex;align-items:center;gap:9px;"><span style="width:20px;text-align:center;font-size:0.9rem;flex-shrink:0;">&#9650;</span>Vercel</span></td>
+                        <td><span class="cm">9 meters</span></td>
+                        <td><span class="cm">partial</span></td>
+                        <td><span class="cm">partial</span></td>
+                        <td><span class="cx">&#10005;</span></td>
+                    </tr>
+                    <tr>
+                        <td style="color:var(--text-2);"><span style="display:inline-flex;align-items:center;gap:9px;"><span style="width:20px;text-align:center;font-size:1rem;flex-shrink:0;">&#128642;</span>Railway</span></td>
+                        <td><span class="cm">per-sec</span></td>
+                        <td><span class="cm">partial</span></td>
+                        <td><span class="cx">&#10005;</span></td>
+                        <td><span class="cm">partial</span></td>
+                    </tr>
+                    <tr>
+                        <td style="color:var(--text-2);"><span style="display:inline-flex;align-items:center;gap:9px;"><span style="width:20px;text-align:center;font-size:0.9rem;flex-shrink:0;">&#9675;</span>Render</span></td>
+                        <td><span class="cm">per-seat</span></td>
+                        <td><span class="cm">partial</span></td>
+                        <td><span class="cx">&#10005;</span></td>
+                        <td><span class="cm">partial</span></td>
+                    </tr>
+                    <tr>
+                        <td style="color:var(--text-2);"><span style="display:inline-flex;align-items:center;gap:9px;"><span style="width:20px;text-align:center;font-size:1rem;flex-shrink:0;">&#128156;</span>Lovable / Replit</span></td>
+                        <td><span class="cm">metered</span></td>
+                        <td><span class="cm">3-4 only</span></td>
+                        <td><span class="cm">builder</span></td>
+                        <td><span class="cx">&#10005;</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout reveal" style="background:rgba(88,166,255,0.06);border-left-color:var(--blue);">
+            <span style="color:var(--text-2);font-size:0.88rem;">Incumbents cannot change pricing - cloud wrappers cannot fix the meter their reseller forces on them. </span>
+            <span style="color:var(--blue);font-weight:600;">We rebuilt the stack from the metal up.</span>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 10 - TRACTION
+═══════════════════════════════════════ -->
+<div class="slide" data-slide="10">
+    <div class="grid-bg"></div>
+    <div class="gradient-mesh">
+        <div class="blob" style="width:420px;height:420px;top:-110px;right:-80px;background:#3fb950;opacity:0.09;"></div>
+        <div class="blob" style="width:280px;height:280px;bottom:-70px;left:-50px;background:#58a6ff;opacity:0.07;"></div>
+    </div>
+    <div class="content">
+        <div class="section-label reveal" style="color:var(--green);">// 09 - Traction</div>
+        <h2 class="reveal" style="font-family:'Archivo Black',sans-serif;font-size:clamp(1.5rem,3vw,2.3rem);margin-bottom:1.4rem;line-height:1.2;">Pre-launch. Product is live.<br><span style="color:var(--green);">Customers are already paying.</span></h2>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:1.4rem;">
+            <div class="card-featured reveal" style="padding:22px;text-align:center;">
+                <div class="mono stat-glow" style="font-size:2.6rem;font-weight:700;color:var(--green);margin-bottom:6px;" data-count="10">0</div>
+                <div style="font-weight:600;font-size:0.82rem;margin-bottom:4px;color:var(--text-2);">Paying Customers</div>
+                <div style="font-size:0.75rem;color:var(--text-3);line-height:1.5;">Pre-launch - migrated from systemctl projects</div>
+            </div>
+            <div class="card-featured reveal" style="padding:22px;text-align:center;">
+                <div class="mono" style="font-size:2.6rem;font-weight:700;color:var(--green);margin-bottom:6px;text-shadow:0 0 28px rgba(63,185,80,0.65);" data-count="40">0</div>
+                <div style="font-weight:600;font-size:0.82rem;margin-bottom:4px;color:var(--text-2);">Test Users</div>
+                <div style="font-size:0.75rem;color:var(--text-3);line-height:1.5;">Medical centers, taxi app, accounting platform</div>
+            </div>
+            <div class="card-featured reveal" style="padding:22px;text-align:center;">
+                <div class="mono" style="font-size:2.2rem;font-weight:700;color:var(--green);margin-bottom:6px;text-shadow:0 0 28px rgba(63,185,80,0.65);">5 yrs</div>
+                <div style="font-weight:600;font-size:0.82rem;margin-bottom:4px;color:var(--text-2);">Team Together</div>
+                <div style="font-size:0.75rem;color:var(--text-3);line-height:1.5;">Founding team across 2 companies. All in-person, Tbilisi.</div>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="card reveal">
+                <div style="font-weight:600;font-size:0.85rem;margin-bottom:8px;color:var(--text-2);">&#127959; Built on real production workloads</div>
+                <div style="font-size:0.8rem;color:var(--text-3);line-height:1.58;">systemctl LTD is a revenue-generating software studio since 2024. The K3s bare-metal cluster was running live clients - medical centers, transport, finance - before usectl existed as a product. The infrastructure was battle-tested first.</div>
+            </div>
+            <div class="card reveal">
+                <div style="font-weight:600;font-size:0.85rem;margin-bottom:8px;color:var(--text-2);">&#128205; Where we are today</div>
+                <div style="font-size:0.8rem;color:var(--text-3);line-height:1.75;">
+                    <div><span style="color:var(--green);">&#10003;</span> CLI, dashboard, MCP, 8 addons, PR previews - all live</div>
+                    <div><span style="color:var(--green);">&#10003;</span> systemctl LTD (parent studio) revenue-generating; usectl unit economics profitable at current load</div>
+                    <div><span style="color:var(--green);">&#10003;</span> Applied to Y Combinator S26</div>
+                    <div><span style="color:var(--green);">&#10003;</span> Public launch aligned with program milestones</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 11 - THE TEAM
+═══════════════════════════════════════ -->
+<div class="slide" data-slide="11">
+    <div class="grid-bg"></div>
+    <div class="gradient-mesh">
+        <div class="blob" style="width:440px;height:440px;top:-110px;right:-90px;background:#58a6ff;opacity:0.08;"></div>
+        <div class="blob" style="width:300px;height:300px;bottom:-70px;left:-60px;background:#a78bfa;opacity:0.06;"></div>
+    </div>
+    <div class="content">
+        <div class="section-label reveal" style="color:var(--blue);">// 10 - Team</div>
+        <h2 class="reveal" style="font-family:'Archivo Black',sans-serif;font-size:clamp(1.4rem,2.8vw,2.1rem);margin-bottom:1.4rem;line-height:1.2;">4 founders. 5 years together.<br><span style="color:var(--blue);">Built in production.</span></h2>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem;">
+            <div class="team-card card reveal">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+                    <div class="avatar" style="background:linear-gradient(135deg,#58a6ff,#3fb950);">G</div>
+                    <div>
+                        <div style="font-weight:700;font-size:0.92rem;color:var(--text);margin-bottom:2px;">Gocha Berulava</div>
+                        <div style="font-size:0.75rem;color:var(--blue);font-weight:600;">CEO & Co-founder</div>
+                    </div>
+                </div>
+                <div style="font-size:0.78rem;color:var(--text-3);line-height:1.58;">Came to tech from operations (MA Law, MBA, import/export company founder). Learned to code at 33 - became project owner of a production accounting CRM by year 2. Selected by his own senior engineers as CEO. His non-technical background is the product: he felt the deployment gap himself.</div>
+            </div>
+            <div class="team-card card reveal">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+                    <div class="avatar" style="background:linear-gradient(135deg,#3fb950,#58a6ff);">G</div>
+                    <div>
+                        <div style="font-weight:700;font-size:0.92rem;color:var(--text);margin-bottom:2px;">Giorgi Nizharadze</div>
+                        <div style="font-size:0.75rem;color:var(--green);font-weight:600;">CTO & Co-founder</div>
+                    </div>
+                </div>
+                <div style="font-size:0.78rem;color:var(--text-3);line-height:1.58;">Senior engineer who reverse-engineered car manufacturer auth flows for fun. Migrated systemctl's entire stack to bare-metal K3s, leading 6 engineers. Built Satsavi (satsavi.com) - zero-knowledge password manager with org sharing tiers.</div>
+            </div>
+            <div class="team-card card reveal">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+                    <div class="avatar" style="background:linear-gradient(135deg,#a78bfa,#58a6ff);">S</div>
+                    <div>
+                        <div style="font-weight:700;font-size:0.92rem;color:var(--text);margin-bottom:2px;">Sergo Shishmanidze</div>
+                        <div style="font-size:0.75rem;color:var(--orange);font-weight:600;">Frontend Lead & Co-founder</div>
+                    </div>
+                </div>
+                <div style="font-size:0.78rem;color:var(--text-3);line-height:1.58;">8+ years frontend engineering. Built the usectl dashboard and web interface from scratch. Previously at Hypercubic Innovation Center. One of the senior engineers who trained Gocha when they first worked together.</div>
+            </div>
+            <div class="team-card card reveal">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+                    <div class="avatar" style="background:linear-gradient(135deg,#58a6ff,#a78bfa);">D</div>
+                    <div>
+                        <div style="font-weight:700;font-size:0.92rem;color:var(--text);margin-bottom:2px;">Demetre Gorgadze</div>
+                        <div style="font-size:0.75rem;color:var(--blue);font-weight:600;">COO & Co-founder</div>
+                    </div>
+                </div>
+                <div style="font-size:0.78rem;color:var(--text-3);line-height:1.58;">BA in IT (GTU). Ex-Silknet, Qarva (IPTV for 110K users), IT infra. Founded NAPIRZE - mobilized 400+ volunteers, planted 4,000 trees. Leads ops, GTM, pricing strategy.</div>
+            </div>
+        </div>
+
+        <div class="callout reveal" style="background:rgba(88,166,255,0.04);border-left-color:var(--blue);">
+            <span style="font-size:0.82rem;color:var(--text-3);">Legal: <span style="color:var(--text-2);font-weight:600;">systemctl LTD (Georgia)</span> + <span style="color:var(--text-2);font-weight:600;">Systemctl Inc. (Delaware C Corp, Stripe Atlas)</span>. Georgia Virtual Zone IT exporter. Bootstrapped.</span>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 12 - CLOSE
+═══════════════════════════════════════ -->
+<div class="slide" data-slide="12">
+    <div class="grid-bg"></div>
+    <div class="gradient-mesh">
+        <div class="blob" style="width:580px;height:580px;top:-180px;right:-130px;background:#58a6ff;opacity:0.12;"></div>
+        <div class="blob" style="width:380px;height:380px;bottom:-110px;left:-85px;background:#3fb950;opacity:0.09;"></div>
+        <div class="blob" style="width:240px;height:240px;top:36%;left:10%;background:#a78bfa;opacity:0.07;"></div>
+    </div>
+    <canvas class="particle-canvas" style="position:absolute;inset:0;z-index:2;width:100%;height:100%;"></canvas>
+    <div class="content" style="text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+        <div class="reveal" style="margin-bottom:2rem;"><div class="logo-box" style="animation:float 3.5s ease-in-out infinite;">&#9881;</div></div>
+
+        <!-- Hero statement -->
+        <div class="reveal" style="margin-bottom:0.6rem;">
+            <p style="font-family:'Archivo Black',sans-serif;font-size:clamp(2.2rem,5.2vw,4rem);line-height:1.08;color:var(--text);">Agents write the code.</p>
+        </div>
+        <div class="reveal" style="margin-bottom:1.6rem;">
+            <p style="font-family:'Archivo Black',sans-serif;font-size:clamp(2.2rem,5.2vw,4rem);line-height:1.08;background:linear-gradient(135deg,#58a6ff,#3fb950,#58a6ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">We ship it.</p>
+        </div>
+
+        <!-- Supporting lines - visually grouped -->
+        <div class="reveal" style="max-width:520px;padding:1.2rem 0;border-top:1px solid rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:2.2rem;">
+            <p style="font-size:clamp(1rem,1.8vw,1.25rem);color:var(--text-2);line-height:1.55;font-weight:400;">Builders get the week back.<br>And the bill they expected.</p>
+        </div>
+
+        <!-- CTAs -->
+        <div class="reveal" style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:2rem;">
+            <a href="https://usectl.com" class="cta-btn" style="background:rgba(88,166,255,0.1);border-color:rgba(88,166,255,0.3);color:var(--blue);">&#127760; usectl.com</a>
+            <a href="https://systemctl.sh" class="cta-btn" style="background:rgba(63,185,80,0.08);border-color:rgba(63,185,80,0.28);color:var(--green);">&#127970; systemctl.sh</a>
+            <a href="mailto:gocha@systemctl.sh" class="cta-btn" style="background:rgba(167,139,250,0.08);border-color:rgba(167,139,250,0.28);color:var(--orange);">&#9993; gocha@systemctl.sh</a>
+        </div>
+
+        <div class="reveal mono" style="font-size:0.72rem;color:var(--text-3);">systemctl LTD &middot; Tbilisi, Georgia &middot; Delaware C Corp &middot; Bootstrapped &middot; Pre-seed</div>
+    </div>
+</div>
+
+</div><!-- /deck -->
+
+<!-- Navigation -->
+<div class="nav-controls">
+    <button class="nav-btn" onclick="changeSlide(-1)">&#8249;</button>
+    <div class="slide-dots" id="dots"></div>
+    <button class="nav-btn" onclick="changeSlide(1)">&#8250;</button>
+    <div class="nav-sep"></div>
+    <span class="slide-counter" id="counter">1 / 12</span>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   DECK NAVIGATION
+   ══════════════════════════════════════════ */
+let current = 1;
+const total = document.querySelectorAll('.slide').length;
+const dotsEl = document.getElementById('dots');
+const counterEl = document.getElementById('counter');
+const progressBar = document.getElementById('progress-bar');
+
+/* Build dots */
+for (let i = 1; i <= total; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 1 ? ' active' : '');
+    d.onclick = () => goToSlide(i);
+    dotsEl.appendChild(d);
+}
+
+function updateProgress() {
+    progressBar.style.width = (current / total * 100) + '%';
+}
+
+function goToSlide(n) {
+    if (n === current) return;
+    const prev = document.querySelector('.slide.active');
+    const next = document.querySelector(`.slide[data-slide="${n}"]`);
+    if (prev) prev.classList.remove('active');
+    if (next) { next.classList.add('active'); animateSlide(next); }
+    current = n;
+    updateNav();
+    updateProgress();
+}
+
+function changeSlide(dir) {
+    let n = current + dir;
+    if (n < 1) n = total;
+    if (n > total) n = 1;
+    goToSlide(n);
+}
+
+function updateNav() {
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i + 1 === current));
+    counterEl.textContent = current + ' / ' + total;
+}
+
+/* Keyboard */
+document.addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); changeSlide(1); }
+    if (e.key === 'ArrowLeft' || e.key === 'Backspace') { e.preventDefault(); changeSlide(-1); }
+    if (e.key === 'Home') { e.preventDefault(); goToSlide(1); }
+    if (e.key === 'End') { e.preventDefault(); goToSlide(total); }
+    if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        if (document.fullscreenElement) document.exitFullscreen();
+        else document.documentElement.requestFullscreen();
+    }
+    if (/^[0-9]$/.test(e.key)) {
+        e.preventDefault();
+        const n = parseInt(e.key, 10);
+        goToSlide(n === 0 ? 10 : n);
+    }
+});
+
+/* Touch swipe */
+let tx = 0;
+document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => {
+    const d = tx - e.changedTouches[0].clientX;
+    if (Math.abs(d) > 50) changeSlide(d > 0 ? 1 : -1);
+}, { passive: true });
+
+/* ══════════════════════════════════════════
+   SLIDE ANIMATIONS
+   ══════════════════════════════════════════ */
+function animateSlide(slide) {
+    slide.querySelectorAll('.reveal').forEach((el, i) => {
+        el.style.transition = 'none';
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(16px)';
+        el.offsetHeight; // force reflow
+        const delay = i * 0.065;
+        el.style.transition = `opacity 0.38s ease ${delay}s, transform 0.38s ease ${delay}s`;
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0)';
+    });
+    animateEffects(slide);
+    if (slide.dataset.slide === '1') startTyped();
+}
+
+function animateEffects(slide) {
+    /* Count-up numbers */
+    slide.querySelectorAll('[data-count]:not(.counted)').forEach(el => {
+        el.classList.add('counted');
+        const target = parseInt(el.dataset.count);
+        let cur = 0;
+        const step = Math.max(1, target / 45);
+        const t = setInterval(() => {
+            cur += step;
+            if (cur >= target) { cur = target; clearInterval(t); }
+            el.textContent = Math.round(cur);
+        }, 24);
+    });
+    /* Bar fills */
+    slide.querySelectorAll('.bar-fill:not(.fill-init)').forEach((bar, i) => {
+        bar.classList.add('fill-init');
+        bar.style.width = '0%';
+        bar.style.transition = `width 0.85s ease ${i * 0.14}s`;
+        bar.offsetHeight;
+        bar.style.width = (bar.dataset.width || 0) + '%';
+    });
+}
+
+/* ══════════════════════════════════════════
+   TYPED CLI ANIMATION
+   ══════════════════════════════════════════ */
+const typedEl = document.getElementById('typed-cli');
+const typedStr = '$ usectl deploy';
+let typedIdx = 0, typedTimer = null;
+
+function startTyped() {
+    if (!typedEl) return;
+    typedEl.textContent = '';
+    typedIdx = 0;
+    clearInterval(typedTimer);
+    typedTimer = setInterval(() => {
+        typedEl.textContent = typedStr.slice(0, ++typedIdx) + (typedIdx < typedStr.length ? '█' : '');
+        if (typedIdx >= typedStr.length) clearInterval(typedTimer);
+    }, 68);
+}
+
+/* ══════════════════════════════════════════
+   MOUSE SPOTLIGHT
+   ══════════════════════════════════════════ */
+document.addEventListener('mousemove', e => {
+    const s = document.getElementById('spotlight');
+    if (s) s.style.background = `radial-gradient(700px circle at ${e.clientX}px ${e.clientY}px, rgba(88,166,255,0.038), transparent 42%)`;
+});
+
+/* ══════════════════════════════════════════
+   PARTICLE SYSTEM
+   ══════════════════════════════════════════ */
+window.initParticles = function(canvas, opts) {
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth || window.innerWidth;
+    canvas.height = canvas.offsetHeight || window.innerHeight;
+    const interactive = opts.interactive !== false;
+    const count = opts.count || (interactive ? 50 : 16);
+    let mx = -9999, my = -9999;
+    const ps = Array.from({ length: count }, () => ({
+        x: Math.random() * canvas.width,  y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.26, vy: (Math.random() - 0.5) * 0.26,
+        size: Math.random() * 2.2 + 0.6,  alpha: Math.random() * 0.22 + 0.06
+    }));
+    if (interactive) {
+        canvas.addEventListener('mousemove', e => { const r = canvas.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top; });
+        canvas.addEventListener('mouseleave', () => { mx = -9999; my = -9999; });
+    }
+    (function loop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ps.forEach(p => {
+            if (interactive) {
+                const dx = p.x - mx, dy = p.y - my, d = Math.sqrt(dx*dx + dy*dy);
+                if (d < 110) { const f = (110 - d) / 110 * 1.7; p.vx += dx/d*f*0.09; p.vy += dy/d*f*0.09; }
+            }
+            p.vx *= 0.98; p.vy *= 0.98; p.x += p.vx; p.y += p.vy;
+            if (p.x < 0) p.x = canvas.width;  if (p.x > canvas.width)  p.x = 0;
+            if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(88,166,255,${p.alpha})`; ctx.fill();
+        });
+        requestAnimationFrame(loop);
+    })();
+};
+
+document.querySelectorAll('.particle-canvas').forEach(c => window.initParticles(c, { interactive: true, count: 50 }));
+document.querySelectorAll('.particle-canvas-ambient').forEach(c => window.initParticles(c, { interactive: false, count: 16 }));
+
+/* Init first slide */
+updateProgress();
+try { animateSlide(document.querySelector('.slide.active')); } catch(e) {}
+</script>
+</body>
+</html>
